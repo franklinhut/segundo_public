@@ -1,0 +1,21 @@
+
+do $$
+declare 
+forma_voto int =0;
+datos record;
+nvotar int;
+--creacion del cursor 
+c_nvotacion cursor for select * from votacion, estado, votar where 
+votacion.id_votacion =votar.id_votar and estado.id_estado = votar.id_votar
+;
+begin
+	for nvotar in c_nvotacion
+	loop
+	forma_voto =forma_voto + count (nvotar.id_votar);
+	end loop;
+open  c_nvotacion;
+fetch c_nvotacion into datos;
+raise notice 'Fecha de inicio: %,Fecha final: %, votos totales: %, porcentaje: %, codigo de opcion: %, forma de voto: %, presidente: %', datos.fecha_inicio,
+datos.fecha_fin,datos.votos_totales,datos.porct_participacion,datos.cod_opcion,datos.forma_voto,datos.presidente;
+end $$
+language 'plpgsql';

@@ -1,0 +1,13 @@
+--PROCEDIMIENTO ALMACENADO
+
+create or replace function total_votacion(varchar ,integer) returns bigint
+as
+$total_votacion$
+select distinct sum(votos_totales) from votar natural join votacion
+where 
+votacion.id_votacion = votar.id_votacion and id_ambito= '2'
+
+$total_votacion$
+language SQL;
+
+select total_votacion('votos_totales',2);

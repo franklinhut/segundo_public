@@ -1,0 +1,57 @@
+--trigger para elector que se encuentra en mesa y sufrago--
+create or replace function tr_elector()
+returns trigger as $tr_elector$
+declare
+
+id_mesa int ;
+
+nvoto int;
+begin
+select count(*) into id_mesa  from elector where id_elector=new.id_elector;
+         select id_votar into nvoto from votar ;
+if(id_mesa >= nvoto) then
+   raise exception SQLSTATE 'E0003' using
+        message = 'Hey..Este elector se presento a mesa y a sufragar... ';
+    return false;
+end if;
+return new;
+end;
+$tr_elector$ language 'plpgsql';
+create trigger tr_elector
+before insert or update on elector
+for each row
+execute procedure tr_elector();
+
+-- insersion de electores ya registrados--
+insert into ELECTOR values(7,6,5,8);
+
+////////////////////////////////////////////////////
+--trigger para candidato y lista de candidatura--
+
+create or replace function tr_candidato()
+returns trigger as $$
+declare
+registros int;
+begin
+
+registros :=(select count (id_candidato) from candidato where 
+nombre = new.nombre);
+if(registros > 0) then
+   raise exception SQLSTATE 'E0002' using
+        message = 'Hey..Este candidato ya se encuentra registrado ';
+    return false;
+end if;
+
+
+return new;
+end;
+$$ language plpgsql;
+
+create trigger tr_candidato
+before insert or update on candidato
+for each row
+execute procedure tr_candidato();
+
+--ingreso de partido politico existente--
+
+insert into CANDIDATO values(1, 35,'RAFAEL','CORREA','DELAGADO',1);

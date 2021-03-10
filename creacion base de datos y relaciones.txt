@@ -1,0 +1,442 @@
+/*
+  --SISTEMA ELECTORAL--
+   
+Edison Franklin Villegas Lopez
+GESTION DE BASE DE DATOS
+
+*/
+--------TABLA AMBITO---------
+create table AMBITO(
+ 	id_ambito INT not null PRIMARY KEY,
+ 	descripcion_bi VARCHAR(45) not null
+	
+);
+--------TABLA ESTADO---------
+create table ESTADO(
+ 	id_estado INT not null PRIMARY KEY,
+        descripcion_es VARCHAR(45) not null
+	
+);
+--------TABLA VOTACION---------
+create table VOTACION(
+ 	id_votacion INT not null PRIMARY KEY,
+ 	titulo VARCHAR(45) not null,
+	descripcion VARCHAR(45) not null,
+	fecha_inicio DATE not null,
+	fecha_fin DATE not null,
+	fecha_publicacion DATE not null,
+	estado VARCHAR(30) not null,
+	direccion_web VARCHAR(45) not null,
+	votos_totales INT not null,
+	porct_participacion DECIMAL not null,
+	presidente VARCHAR(40) not null,
+	id_ambito INT not null,
+	id_estado INT not null,
+
+	
+	CONSTRAINT votacion_ambito_fk foreign key (id_ambito)
+ 	references AMBITO (id_ambito)match simple,
+ 	
+ 	CONSTRAINT votacion_estado_fk foreign key (id_estado)
+ 	references ESTADO (id_estado)match simple
+);
+--------TABLA CENSO-----------
+create table CENSO(
+ 	id_censo INT not null PRIMARY KEY,
+ 	id_ambito INT not null,
+ 	
+	CONSTRAINT censo_amb_fk foreign key (id_ambito)
+ 	references AMBITO (id_ambito)match simple
+	
+);
+
+
+
+
+--------TABLA CENSO HABILITADO---------
+create table CENSO_HABILITADO(
+ 	id_censo_habilitado INT not null PRIMARY KEY,
+ 	id_votacion INT not null,
+ 	id_censo INT not null,
+ 	
+	CONSTRAINT censo_habilitado_votacion_fk foreign key (id_votacion)
+ 	references VOTACION (id_votacion)match simple,
+	CONSTRAINT censo_habilitado_censo_fk foreign key (id_censo)
+ 	references CENSO (id_censo)match simple
+);
+--------TABLA CENSO GLOBAL---------
+create table CENSO_GLOBAL(
+	id_censo_global INT not null PRIMARY KEY,
+	id_censo INT not null,
+
+	CONSTRAINT censo_global_censo_fk foreign key (id_censo)
+ 	references CENSO (id_censo)match simple
+ 	
+);
+--------TABLA CENSO NACIONAL---------
+create table CENSO_NACIONAL(
+	id_censo_nacional INT not null PRIMARY KEY,
+	cod_global VARCHAR(45) not null,
+	cod_pais VARCHAR(45) not null,
+	nombre VARCHAR(45) not null,
+	id_censo_global INT not null,
+	
+	CONSTRAINT censo_nacional_censo_global_fk foreign key (id_censo_global)
+ 	references CENSO_GLOBAL (id_censo_global)match simple	
+);
+--------TABLA CENSO REGIONAL---------
+create table CENSO_REGIONAL(
+	id_censo_regional INT not null PRIMARY KEY,
+	cod_pais VARCHAR(45) not null,
+	cod_region VARCHAR(45) not null,
+	nombre VARCHAR(45) not null,
+	id_censo_nacional INT not null,
+	id_censo INT not null,
+	
+	CONSTRAINT censo_regional_censo_nacional_fk foreign key (id_censo_nacional)
+ 	references CENSO_NACIONAL (id_censo_nacional)match simple,
+ 	
+	CONSTRAINT censo_regional_censo_fk foreign key (id_censo)
+ 	references CENSO (id_censo)match simple
+ 	
+	
+);
+
+--------TABLA CENSO LOCAL---------
+create table CENSO_LOCAL(
+	id_censo_local INT not null PRIMARY KEY,
+	cod_pais VARCHAR(45) not null,
+	cod_region VARCHAR(45) not null,
+	cod_localidad VARCHAR(45) not null,
+	nombre VARCHAR(45) not null,
+	id_censo INT not null,
+	id_censo_regional INT not null,
+	
+	CONSTRAINT censo_local_censo_fk foreign key (id_censo)
+ 	references CENSO (id_censo)match simple,
+ 	
+	CONSTRAINT censo_local_censo_regional_fk foreign key (id_censo_regional)
+ 	references CENSO_REGIONAL (id_censo_regional)match simple
+ 	
+);
+--------CENTRO ELECTORAL---------
+create table CENTRO_ELECTORAL(
+	id_centro_electoral INT not null PRIMARY KEY,
+	nombre VARCHAR(45) not null,
+	direccion VARCHAR(45) not null,
+	id_censo_local INT not null,
+	
+	CONSTRAINT centro_electoral_censo_local_fk foreign key (id_censo_local)
+ 	references CENSO_LOCAL (id_censo_local)match simple
+ 	
+);
+--------MESA---------
+create table MESA(
+	id_mesa INT not null PRIMARY KEY,
+	id_centro_electoral INT not null,
+
+	CONSTRAINT mesa_centro_electoral_fk foreign key (id_centro_electoral)
+ 	references CENTRO_ELECTORAL (id_centro_electoral)match simple
+
+);
+--------ELECTOR---------
+create table ELECTOR(
+	id_elector int not null PRIMARY KEY,
+	id_mesa INT not null,
+	id_censo_regional INT not null,
+	id_censo_local INT not null,
+
+	CONSTRAINT elector_censo_regional_fk foreign key (id_censo_regional)
+ 	references CENSO_REGIONAL (id_censo_regional)match simple,
+
+ 	CONSTRAINT electoral_censo_local_fk foreign key (id_censo_local)
+ 	references CENSO_LOCAL (id_censo_local)match simple,
+ 	
+	
+	CONSTRAINT electoral_mesa_fk foreign key (id_mesa)
+ 	references MESA (id_mesa)match simple
+ 	
+);
+
+
+--------TABLA VOTAR---------
+create table VOTAR(
+	id_votar INT not null PRIMARY KEY,
+	cod_opcion INT not null,
+	forma_voto INT not null,
+	id_votacion INT not null,
+	id_elector INT not null,
+
+	CONSTRAINT votar_votacion_fk foreign key (id_votacion)
+ 	references VOTACION (id_votacion)match simple,
+
+	CONSTRAINT votar_elector_fk foreign key (id_elector)
+ 	references ELECTOR (id_elector)match simple
+	
+);
+--------TABLA OPCION---------
+create table OPCION(
+	id_opcion INT not null PRIMARY KEY,
+	descripcion VARCHAR(45) not null,
+	tipo_opcion INT not null,
+	id_votar INT not null,
+
+	CONSTRAINT opcion_votar_fk foreign key (id_votar)
+ 	references VOTAR (id_votar)match simple
+);
+--------TABLA VOTO_NULO---------
+create table VOTO_NULO(
+	id_voto_nulo INT not null PRIMARY KEY,
+	id_opcion INT not null,
+	CONSTRAINT voto_nulo_opcion_fk foreign key (id_opcion)
+ 	references OPCION (id_opcion)match simple
+
+
+);
+
+--------TABLA VOTO_BLANCO---------
+create table VOTO_BLANCO(
+	id_voto_blanco INT not null PRIMARY KEY,
+	id_opcion INT not null,
+	
+	CONSTRAINT voto_blanco_opcion_fk foreign key (id_opcion)
+ 	references OPCION (id_opcion)match simple
+
+);
+--------OPCION_VOTACION---------
+create table OPCION_VOTACION(
+	id_opcion_votacion INT not null PRIMARY KEY,
+	voto INT not null,
+	port_participacion DECIMAL not null,
+	id_opcion INT not null,
+	id_votacion INT not null,
+	
+	CONSTRAINT opcion_votar_opcion_fk foreign key (id_opcion)
+ 	references OPCION (id_opcion)match simple,
+
+ 	CONSTRAINT opcion_votacion_fk foreign key (id_votacion)
+ 	references VOTACION (id_votacion)match simple
+);
+
+
+
+--------CANDIDATO---------
+
+create table CANDIDATO(
+	id_candidato INT not null PRIMARY KEY,
+	orden_lista INT not null,
+	nombre VARCHAR(45) not null,
+	apellido1 VARCHAR(45) not null,
+	apellido2 VARCHAR(45) not null,
+	id_elector INT not null,
+	
+	CONSTRAINT candidato_elector_fk foreign key (id_elector)
+ 	references ELECTOR (id_elector)match simple
+	
+);
+--------PARTIDO POLITICO---------
+
+create table PARTIDO_POLITICO(
+	id_partido_politico INT not null PRIMARY KEY,
+	siglas VARCHAR(45) not null,
+	nombre VARCHAR(45) not null,
+	sede VARCHAR(45) not null,
+	id_opcion INT not null,
+	
+	CONSTRAINT partido_politico_opcion_fk foreign key (id_opcion)
+ 	references OPCION (id_opcion)match simple
+);
+
+
+--------CANDIDATO_VOTACION---------
+create table CANDIDATO_VOTACION(
+	id_candidato_votacion INT not null PRIMARY KEY,
+	cod_partido INT not null,
+	id_opcion_votacion INT not null,
+	id_elector INT not null,
+	id_partido_politico INT not null, 
+
+	CONSTRAINT candidato_votacion_opcion_votacion_fk foreign key (id_opcion_votacion)
+ 	references OPCION_VOTACION (id_opcion_votacion)match simple,
+ 	
+ 	CONSTRAINT candidato_votacion_elector_fk foreign key (id_elector)
+ 	references ELECTOR (id_elector)match simple,
+ 	
+ 	CONSTRAINT candidato_votacion_partido_politico_fk foreign key (id_partido_politico)
+ 	references PARTIDO_POLITICO (id_partido_politico)match simple
+	
+);
+
+--------AMBITO---------
+insert into AMBITO values(1,'AMBITO EN FUNCIONAMIENTO');
+insert into AMBITO values(2,'AMBITO CADUCO');
+insert into AMBITO values(3,'AMBITO NO HABIL');
+;
+
+--------ESTADO---------
+insert into ESTADO values(1,'LAS VOTACIONES SE ENCUENTRAN HABILES');
+insert into ESTADO values(2,'LAS YA FUERON REALIZADAS');
+insert into ESTADO values(3,'VOTACIONES CADUCAS');
+
+
+--------VOTACION---------
+insert into VOTACION values(1,'VOTACIONES 2020','VOTACIONES ELECTORALES HABILITADAS 2020', '2020/10/01', '2020/03/03', '2021/10/10', 'DEMOCRATICO', 'http://cne.gob.ec/es/', 7000000,90.99,'RAFAEL CORREA',2,3);
+insert into VOTACION values(2,'VOTACIONES 1998','VOTACIONES ELECTORALES HABILITADAS 1998', '1998/10/01', '1998/07/02', '2000/10/10', 'DEMOCRATICO', 'http://cne.gob.ec/es/', 2000000,90.99,'JAMIL MAHUAD',2,3);
+insert into VOTACION values(3,'VOTACIONES 2002','VOTACIONES ELECTORALES HABILITADAS 2002', '2002/10/01', '2002/04/08', '2003/10/10', 'DEMOCRATICO', 'http://cne.gob.ec/es/', 4000000,90.99,'LUCIO GUTIERREZ',2,3);
+insert into VOTACION values(4,'VOTACIONES 2006','VOTACIONES ELECTORALES HABILITADAS 2006', '2006/10/01', '2006/07/09', '2007/10/10', 'DEMOCRATICO', 'http://cne.gob.ec/es/', 6000000,90.99,'RAFAEL CORREA',2,3);
+insert into VOTACION values(5,'VOTACIONES 2010','VOTACIONES ELECTORALES HABILITADAS 2010', '2010/10/01', '2010/03/04', '2011/10/10', 'DEMOCRATICO', 'http://cne.gob.ec/es/', 8000000,90.99,'RAFAEL CORREA',2,3);
+insert into VOTACION values(6,'VOTACIONES 2014','VOTACIONES ELECTORALES HABILITADAS 2014', '2014/10/01', '2014/08/06', '2015/10/10', 'DEMOCRATICO', 'http://cne.gob.ec/es/', 8005000,90.99,'RAFAEL CORREA',2,3);
+insert into VOTACION values(7,'VOTACIONES 2018','VOTACIONES ELECTORALES HABILITADAS 2018', '2018/10/01', '2018/09/07', '2019/10/10', 'DEMOCRATICO', 'http://cne.gob.ec/es/', 9060000,90.99,'LENIN MORENO',2,2);
+insert into VOTACION values(8,'VOTACIONES 2022','VOTACIONES ELECTORALES HABILITADAS 2022', '2022/10/01', '2022/09/02', '2023/10/10', 'DEMOCRATICO', 'http://cne.gob.ec/es/', 9406000,90.99,'EN ESPERA',3,1);
+--------CENSO---------
+insert into CENSO values(1,1);
+insert into CENSO values(2,1);
+insert into CENSO values(3,1);
+insert into CENSO values(4,1);
+insert into CENSO values(5,1);
+insert into CENSO values(6,1);
+insert into CENSO values(7,1);
+
+--------CENSO_HABILITADO---------
+insert into CENSO_HABILITADO values(1,1,1);
+insert into CENSO_HABILITADO values(2,2,1);
+insert into CENSO_HABILITADO values(3,3,1);
+insert into CENSO_HABILITADO values(4,4,1);
+insert into CENSO_HABILITADO values(5,5,1);
+insert into CENSO_HABILITADO values(6,6,1);
+insert into CENSO_HABILITADO values(7,7,1);
+insert into CENSO_HABILITADO values(8,8,1);
+
+--------CENSO_GLOBAL---------
+insert into CENSO_GLOBAL values(1,1);
+insert into CENSO_GLOBAL values(2,1);
+insert into CENSO_GLOBAL values(3,1);
+insert into CENSO_GLOBAL values(4,1);
+insert into CENSO_GLOBAL values(5,1);
+insert into CENSO_GLOBAL values(6,1);
+insert into CENSO_GLOBAL values(5,1);
+--------CENSO_NACIONAL---------
+insert into CENSO_NACIONAL values(1,'GLO0212','LTT021','ECUADOR 1998',1);
+insert into CENSO_NACIONAL values(2,'GLO0346','ERT021','ECUADOR 2002',1);
+insert into CENSO_NACIONAL values(3,'CG345','GH78','VENEZUELA 2006',1);
+insert into CENSO_NACIONAL values(4,'GLO021','77JU','ECUADOR 2010',1);
+insert into CENSO_NACIONAL values(5,'GLO0235','56YUI','ECUADOR 2014',1);
+insert into CENSO_NACIONAL values(6,'GLO1234','45688IU','ECUADOR 2018',1);
+insert into CENSO_NACIONAL values(7,'GLO345','REX56','ECUADOR 2022',1);
+--------CENSO_REGIONAL---------
+insert into CENSO_REGIONAL values(1,'00015','LTT021', 'COSTA',1,1);
+insert into CENSO_REGIONAL values(2,'00015','ERT021', 'SIERRA',2,2);
+insert into CENSO_REGIONAL values(3,'00015','77JU', 'ORIENTE',3,3);
+insert into CENSO_REGIONAL values(4,'00015','77JU', 'INSULAR',4,4);
+insert into CENSO_REGIONAL values(5,'00015','LTT021', 'COSTA',5,5);
+insert into CENSO_REGIONAL values(6,'00015','ERT021', 'SIERRA',6,6);
+insert into CENSO_REGIONAL values(7,'00015','77JU', 'ORIENTE',7,7);
+insert into CENSO_REGIONAL values(8,'00015','77JU', 'INSULAR',8,8);
+insert into CENSO_REGIONAL values(9,'00015','77JU', 'INSULAR',9,9);
+--------CENSO_LOCAL---------
+insert into CENSO_LOCAL values(1, '00015','0125ER4','015FG454','CENSO ELECTORAL',1,1);
+insert into CENSO_LOCAL values(2, '00016','0125DR4','015DF454','MANTA',1,2);
+insert into CENSO_LOCAL values(3, '00019','0125GHG4','01545HTT4','QUITO',1,3);
+insert into CENSO_LOCAL values(4, '000100','0125HG4','015GG454','SANTO DOMINGO',1,4);
+insert into CENSO_LOCAL values(5, '00014','01254JH','0154GGH54','AMBATO',1,5);
+insert into CENSO_LOCAL values(6, '000155','01TR254','0154DG54','GUAYAQUIL',1,6);
+insert into CENSO_LOCAL values(7, '000123','0RT1254','01545DEW4','CHONE',1,7);
+--------CENTRO_ELECTORAL---------
+insert into CENTRO_ELECTORAL values(1, 'CENTRO ELECTORAL QUITO','QUITO',1);
+insert into CENTRO_ELECTORAL values(2, 'CENTRO ELECTORAL MANTA','PALMAR',2);
+insert into CENTRO_ELECTORAL values(3, 'CENTRO ELECTORAL QUITO','PLAZA GRANDE',3);
+insert into CENTRO_ELECTORAL values(4, 'CENTRO ELECTORAL S.D','TERMINAL',4);
+insert into CENTRO_ELECTORAL values(5, 'CENTRO ELECTORAL AMBATO','MERCADO',5);
+insert into CENTRO_ELECTORAL values(6, 'CENTRO ELECTORAL GUAYAQUIL','PUERTO',6);
+insert into CENTRO_ELECTORAL values(7, 'CENTRO ELECTORAL CHONE','UPC POLICIAL',7);
+
+--------MESA---------
+insert into MESA values(1,1);
+insert into MESA values(2,2);
+insert into MESA values(3,3);
+insert into MESA values(4,4);
+insert into MESA values(5,5);
+insert into MESA values(6,6);
+insert into MESA values(7,7);
+--------ELECTOR---------
+insert into ELECTOR values(1,1,1,1);
+insert into ELECTOR values(2,2,2,2);
+insert into ELECTOR values(3,3,3,3);
+insert into ELECTOR values(4,4,4,4);
+insert into ELECTOR values(5,5,5,5);
+insert into ELECTOR values(6,6,6,6);
+insert into ELECTOR values(7,7,7,7);
+--------VOTAR---------
+insert into VOTAR values(1,12,35,1,1);
+insert into VOTAR values(2,24,4,2,2);
+insert into VOTAR values(3,48,7,3,3);
+insert into VOTAR values(4,3,6,4,4);
+insert into VOTAR values(5,6,21,5,5);
+insert into VOTAR values(6,9,5,6,6);
+insert into VOTAR values(7,12,2,7,7);
+
+--------OPCION---------
+insert into OPCION values(1,'LAS VOTACIONES SE ENCUENTRAN ABIERTAS',3,1);
+insert into OPCION values(2,'LAS VOTACIONES SE ENCUENTRAN ABIERTAS',3,2);
+insert into OPCION values(3,'LAS VOTACIONES SE ENCUENTRAN ABIERTAS',3,3);
+insert into OPCION values(4,'LAS VOTACIONES SE ENCUENTRAN ABIERTAS',3,4);
+insert into OPCION values(5,'LAS VOTACIONES SE ENCUENTRAN ABIERTAS',3,5);
+insert into OPCION values(6,'LAS VOTACIONES SE ENCUENTRAN ABIERTAS',3,6);
+insert into OPCION values(7,'LAS VOTACIONES SE ENCUENTRAN ABIERTAS',3,7);
+
+--------VOTO_NULO---------
+insert into VOTO_NULO values(1,1);
+insert into VOTO_NULO values(2,2);
+insert into VOTO_NULO values(3,3);
+insert into VOTO_NULO values(4,4);
+insert into VOTO_NULO values(5,5);
+insert into VOTO_NULO values(6,6);
+insert into VOTO_NULO values(7,7);
+--------VOTO_BLANCO---------
+insert into VOTO_BLANCO values(1,1);
+insert into VOTO_BLANCO values(2,2);
+insert into VOTO_BLANCO values(3,3);
+insert into VOTO_BLANCO values(4,4);
+insert into VOTO_BLANCO values(5,5);
+insert into VOTO_BLANCO values(6,6);
+insert into VOTO_BLANCO values(7,7);
+
+--------OPCION_VOTACION---------
+insert into OPCION_VOTACION values(1, '500','101',1,1);
+insert into OPCION_VOTACION values(2, '600','80.1',2,2);
+insert into OPCION_VOTACION values(3, '1000','100',3,3);
+insert into OPCION_VOTACION values(4, '5000','70.8',4,4);
+insert into OPCION_VOTACION values(5, '2400','80.9',5,5);
+insert into OPCION_VOTACION values(6, '3000','90.9',6,6);
+insert into OPCION_VOTACION values(7, '700','90',7,7);
+insert into OPCION_VOTACION values(8, '2000','100',8,8);
+--------CANDIDATO---------
+insert into CANDIDATO values(1, 35,'RAFAEL','CORREA','DELAGADO',1);
+insert into CANDIDATO values(2, 3,'GUILLERMO','LASSO','DELAGADO',2);
+insert into CANDIDATO values(3, 7,'PAUL','ZAMBRANO','LOPEZ',3);
+insert into CANDIDATO values(4, 6,'MAICOL','LOPEZ','ZUARES',4);
+insert into CANDIDATO values(5, 21,'TOMAS','VILLEGAS','PINKAY',5);
+insert into CANDIDATO values(6, 8,'PABLO','ZOLORZANO','PINARGOTE',6);
+insert into CANDIDATO values(7, 66,'ROSA','RESABALA','TACO',7);
+--------PARTIDO_POLITICO---------
+insert into PARTIDO_POLITICO values(1, 'LGT','LISTA 35','QUITO GUNARMENTAL',1);
+insert into PARTIDO_POLITICO values(2, 'TRE','LISTA 35','MANTA GUNARMENTAL',1);
+insert into PARTIDO_POLITICO values(3, 'GT','LISTA 35','QUITO GUNARMENTAL',1);
+insert into PARTIDO_POLITICO values(4, 'DBZ','LISTA 35','SANTO DOMINGO GUNARMENTAL',1);
+insert into PARTIDO_POLITICO values(5, 'LG','LISTA 35','AMBATO GUNARMENTAL',1);
+insert into PARTIDO_POLITICO values(6, 'MRT','LISTA 35','GUAYAQUIL GUNARMENTAL',1);
+insert into PARTIDO_POLITICO values(7, 'BNN','LISTA 35','CHONE GUNARMENTAL',1);
+insert into PARTIDO_POLITICO values(8, 'BGR','LISTA 35','QUITO GUNARMENTAL',1);
+--------CANDIDATO_VOTACION---------
+insert into CANDIDATO_VOTACION values(1,1,1,1,1);
+insert into CANDIDATO_VOTACION values(2,2,2,2,2);
+insert into CANDIDATO_VOTACION values(3,3,3,3,3);
+insert into CANDIDATO_VOTACION values(4,4,4,4,4);
+insert into CANDIDATO_VOTACION values(5,5,5,5,5);
+insert into CANDIDATO_VOTACION values(6,6,6,6,6);
+insert into CANDIDATO_VOTACION values(7,7,7,7,7);
+
+
+
+
+
